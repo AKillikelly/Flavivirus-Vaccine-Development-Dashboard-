@@ -1,0 +1,25 @@
+# Operating system clutter
+.DS_Store
+Thumbs.db
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local virtual environments
+.venv/
+venv/
+env/
+
+# Local-only environment files
+.env
+.env.*
+
+# Local editor settings
+.vscode/
+.idea/
+
+# Optional: uncomment to avoid committing large raw source snapshots.
+# Leave tracked if COMMIT_GENERATED_DATA=true and you want raw audit history.
+# data/raw/
