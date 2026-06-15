@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flavivirus vaccine development pathway dashboard</title>
+  <style>
+    :root {
+      --bg: #08111f;
+      --bg-2: #0e1b2d;
+      --panel: rgba(255, 255, 255, 0.075);
+      --panel-strong: rgba(255, 255, 255, 0.12);
+      --text: #f4f7fb;
+      --muted: #aebbd0;
+      --line: rgba(255, 255, 255, 0.16);
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+      --radius: 22px;
+      --radius-sm: 14px;
+      --focus: #f3c567;
+      --gap: #8791a5;
+      --early: #91c7ff;
+      --clinical: #c8a5ff;
+      --regulatory: #9ee6c7;
+      --post: #ffe19a;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(83, 138, 255, 0.34), transparent 28rem),
+        radial-gradient(circle at 70% 0%, rgba(55, 211, 167, 0.16), transparent 32rem),
+        linear-gradient(180deg, var(--bg), #050913 62%, #04070d);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    a { color: #a9d6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button, input, select { font: inherit; }
+    .wrap { width: min(1500px, calc(100vw - 32px)); margin: 0 auto; }
+    .hero {
+      padding: 56px 0 30px;
+      position: relative;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #d4e2ff;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7ee0bd;
+      box-shadow: 0 0 18px #7ee0bd;
+    }
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(2.1rem, 6vw, 5.3rem);
+      line-height: 0.95;
+      letter-spacing: -0.075em;
+      max-width: 1050px;
+    }
+    .hero-copy {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.5vw, 1.23rem);
+      line-height: 1.65;
+      margin: 0 0 22px;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin: 24px 0 0;
+    }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 999px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 650;
+      box-shadow: none;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.16); text-decoration: none; }
+    .btn.primary { background: linear-gradient(135deg, rgba(126,224,189,0.26), rgba(169,214,255,0.20)); border-color: rgba(169,214,255,0.45); }
+    .note {
+      margin-top: 22px;
+      padding: 18px 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: #dbe6f8;
+      line-height: 1.55;
+    }
+    .note strong { color: var(--text); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 14px;
+      margin: 24px 0;
+    }
+    .metric-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      min-height: 112px;
+      box-shadow: var(--shadow);
+    }
+    .metric-value { font-size: 2.15rem; font-weight: 820; letter-spacing: -0.04em; }
+    .metric-label { color: var(--muted); font-size: 0.92rem; margin-top: 6px; line-height: 1.35; }
+
+    section { margin: 24px 0 32px; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 0 0 14px;
+    }
+    h2 { margin: 0; font-size: clamp(1.45rem, 2.4vw, 2.25rem); letter-spacing: -0.04em; }
+    .section-head p { margin: 0; color: var(--muted); max-width: 850px; line-height: 1.5; }
+
+    .filters {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1.15fr 1fr 1fr minmax(220px, 1.5fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .field label { display: block; color: var(--muted); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.07em; margin: 0 0 7px; }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(4, 10, 18, 0.64);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus, .btn:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(243,197,103,0.16); }
+    .checkbox-field {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      color: #dbe6f8;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(4, 10, 18, 0.64);
+      min-height: 45px;
+      white-space: nowrap;
+    }
+    .checkbox-field input { width: 18px; height: 18px; }
+
+    .snapshots {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .snapshot-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      min-height: 150px;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+    .snapshot-card:hover { transform: translateY(-2px); border-color: rgba(169,214,255,0.48); background: rgba(255,255,255,0.11); }
+    .target-name { font-weight: 760; font-size: 1.05rem; margin-bottom: 4px; }
+    .target-code { color: var(--muted); font-size: 0.84rem; margin-bottom: 12px; }
+    .stage-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .stage-pill.gap { color: #e1e6ef; border-color: rgba(135,145,165,0.48); }
+    .stage-pill.early { color: #cce7ff; border-color: rgba(145,199,255,0.54); }
+    .stage-pill.clinical { color: #e7d7ff; border-color: rgba(200,165,255,0.54); }
+    .stage-pill.regulatory { color: #d4f8e8; border-color: rgba(158,230,199,0.58); }
+    .stage-pill.post { color: #fff0bf; border-color: rgba(255,225,154,0.62); }
+    .snapshot-meta { color: var(--muted); font-size: 0.87rem; line-height: 1.45; margin-top: 12px; }
+
+    .pathway-scroll { overflow-x: auto; padding-bottom: 12px; }
+    .pathway {
+      min-width: 1180px;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .stage-column {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.065);
+      border-radius: 18px;
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+    }
+    .column-head {
+      padding: 15px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 96px;
+      background: rgba(9, 18, 32, 0.88);
+      backdrop-filter: blur(10px);
+      border-radius: 18px 18px 0 0;
+      z-index: 2;
+    }
+    .column-title { font-weight: 820; letter-spacing: -0.02em; }
+    .column-sub { color: var(--muted); font-size: 0.82rem; margin-top: 5px; line-height: 1.35; }
+    .column-count { margin-top: 10px; color: #d9e8ff; font-size: 0.82rem; }
+    .card-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .candidate-card {
+      appearance: none;
+      width: 100%;
+      text-align: left;
+      background: rgba(5, 12, 22, 0.76);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-left: 4px solid var(--early);
+      border-radius: 15px;
+      padding: 13px;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+    .candidate-card:hover { transform: translateY(-2px); border-color: rgba(169,214,255,0.44); background: rgba(8, 19, 34, 0.94); }
+    .candidate-card.stage-0 { border-left-color: var(--gap); }
+    .candidate-card.stage-1, .candidate-card.stage-2 { border-left-color: var(--early); }
+    .candidate-card.stage-3, .candidate-card.stage-4, .candidate-card.stage-5 { border-left-color: var(--clinical); }
+    .candidate-card.stage-6 { border-left-color: var(--regulatory); }
+    .candidate-card.stage-7 { border-left-color: var(--post); }
+    .card-kicker { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; }
+    .card-title { font-weight: 780; line-height: 1.24; font-size: 0.98rem; }
+    .card-meta { color: #bdc9d9; font-size: 0.82rem; line-height: 1.4; margin-top: 8px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tag { color: #dbe6f8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 4px 7px; font-size: 0.71rem; }
+    .empty { color: var(--muted); border: 1px dashed rgba(255,255,255,0.18); border-radius: 13px; padding: 13px; font-size: 0.87rem; line-height: 1.45; }
+
+    .table-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1080px; }
+    thead { background: rgba(255,255,255,0.09); }
+    th, td { padding: 13px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.10); vertical-align: top; }
+    th { color: #dbe6f8; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: rgba(255,255,255,0.07); }
+    td { color: #eef4fd; font-size: 0.9rem; line-height: 1.4; }
+    td.muted { color: var(--muted); }
+    .small { color: var(--muted); font-size: 0.82rem; }
+
+    .methodology {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .method-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      line-height: 1.55;
+      color: #dce6f6;
+    }
+    .method-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .method-card p { margin: 0; color: var(--muted); }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease;
+      z-index: 49;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(620px, 100vw);
+      height: 100vh;
+      background: #081323;
+      border-left: 1px solid var(--line);
+      box-shadow: -30px 0 70px rgba(0,0,0,0.46);
+      transform: translateX(104%);
+      transition: transform 190ms ease;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+    }
+    body.drawer-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
+    body.drawer-open .drawer { transform: translateX(0); }
+    .drawer-head { display: flex; justify-content: space-between; gap: 16px; padding: 20px 22px; border-bottom: 1px solid var(--line); }
+    .drawer-title { margin: 0; font-size: 1.32rem; line-height: 1.2; letter-spacing: -0.03em; }
+    .drawer-body { padding: 22px; overflow-y: auto; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .detail-box { background: rgba(255,255,255,0.065); border: 1px solid rgba(255,255,255,0.13); border-radius: 13px; padding: 12px; }
+    .detail-label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+    .detail-value { color: var(--text); line-height: 1.4; }
+    .detail-section { margin: 18px 0 0; }
+    .detail-section h4 { margin: 0 0 7px; font-size: 0.96rem; }
+    .detail-section p { margin: 0; color: #dce6f6; line-height: 1.55; }
+    .source-list { display: grid; gap: 8px; margin-top: 8px; }
+    .source-list a { display: block; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 10px 12px; border-radius: 12px; }
+    footer { color: var(--muted); padding: 28px 0 56px; line-height: 1.55; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; color: #fff0bf; }
+
+    @media (max-width: 1200px) {
+      .metrics { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .methodology { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .wrap { width: min(100vw - 20px, 1500px); }
+      .hero { padding-top: 34px; }
+      .metrics { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 8px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .drawer { width: 100vw; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .filters, .action-row, .drawer, .drawer-backdrop { display: none !important; }
+      .wrap { width: 100%; }
+      .pathway { min-width: 0; grid-template-columns: repeat(2, 1fr); }
+      .stage-column, .metric-card, .snapshot-card, .table-card, .method-card, .note { break-inside: avoid; background: #fff; color: #111; border-color: #bbb; box-shadow: none; }
+      a { color: #0645ad; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Clinical pathway map · not a case map</div>
+      <h1>Flavivirus vaccine development pathway dashboard</h1>
+      <p class="hero-copy">A target-by-target map of vaccine-development maturity for medically important flaviviruses. Cards are positioned by the most relevant documented stage, from “no dedicated human-vaccine pathway” through programmatic use, stockpile, and post-licensure monitoring.</p>
+      <div class="action-row">
+        <a class="btn primary" href="#pathway">View pathway map</a>
+        <a class="btn" href="flavivirus_vaccine_development_pipeline_data.csv" download>Download generated CSV</a>
+        <a class="btn" href="automation_summary.md" download>Download automation report</a>
+        <button class="btn" type="button" id="printBtn">Print / save PDF</button>
+      </div>
+      <div class="note">
+        <strong>Interpretation note:</strong> this dashboard maps vaccine-development maturity, not outbreak locations, incidence, country-entry rules, or procurement advice. Rows are generated from curated official/public-health seed sources plus automated ClinicalTrials.gov v2 scanning with deterministic rules. Site rebuilt: <span id="builtAt">2026-06-15T14:00:46Z</span>.
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section aria-label="Summary metrics">
+      <div class="metrics" id="metrics"></div>
+    </section>
+
+    <section class="filters" aria-label="Dashboard filters">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="targetFilter">Target virus</label>
+          <select id="targetFilter"></select>
+        </div>
+        <div class="field">
+          <label for="groupFilter">Virus group</label>
+          <select id="groupFilter"></select>
+        </div>
+        <div class="field">
+          <label for="stageFilter">Stage</label>
+          <select id="stageFilter"></select>
+        </div>
+        <div class="field">
+          <label for="statusFilter">Status type</label>
+          <select id="statusFilter"></select>
+        </div>
+        <div class="field">
+          <label for="searchBox">Search</label>
+          <input id="searchBox" type="search" placeholder="candidate, sponsor, source, country…" autocomplete="off">
+        </div>
+        <label class="checkbox-field" for="gapToggle">
+          <input id="gapToggle" type="checkbox" checked>
+          show gap lanes
+        </label>
+      </div>
+    </section>
+
+    <section id="snapshots" aria-labelledby="snapshotsTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="snapshotsTitle">Target snapshots</h2>
+          <p>Highest mapped stage by target virus, with candidate records counted separately from explicit gap rows.</p>
+        </div>
+      </div>
+      <div class="snapshots" id="snapshotGrid"></div>
+    </section>
+
+    <section id="pathway" aria-labelledby="pathwayTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="pathwayTitle">Development pathway map</h2>
+          <p>Each card sits in the column matching its current pathway stage. Click any card to view evidence, next milestone, source links, and automation notes.</p>
+        </div>
+        <p class="small" id="filteredCount"></p>
+      </div>
+      <div class="pathway-scroll">
+        <div class="pathway" id="pathwayGrid"></div>
+      </div>
+    </section>
+
+    <section id="table" aria-labelledby="tableTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="tableTitle">Candidate detail table</h2>
+          <p>The table is linked to the filters and pathway cards. Select a row to open the source-backed detail panel.</p>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Target</th>
+                <th>Stage</th>
+                <th>Status</th>
+                <th>Platform / sponsor</th>
+                <th>Next milestone</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" aria-labelledby="methodTitle">
+      <div class="section-head">
+        <div>
+          <h2 id="methodTitle">Curation methodology</h2>
+          <p>Automation is designed to be conservative: structured records can add clinical signals, but official or manually configured source rows are required for authorization and programme claims.</p>
+        </div>
+      </div>
+      <div class="methodology">
+        <article class="method-card">
+          <h3>Stage assignment</h3>
+          <p>Rows map to the highest documented target-specific milestone, not to generic platform maturity. For example, licensed yellow fever 17D vaccines are post-licensure for YFV, while a Zika mRNA candidate remains clinical-stage until a target-specific authorization signal appears.</p>
+        </article>
+        <article class="method-card">
+          <h3>Automated refresh</h3>
+          <p><span class="kbd">scripts/fetch_pipeline.py</span> pulls ClinicalTrials.gov v2 records, deduplicates by NCT ID, classifies target/candidate/platform with deterministic aliases, merges with source-backed seed rows, and writes the CSV plus an audit report.</p>
+        </article>
+        <article class="method-card">
+          <h3>Status caveat</h3>
+          <p>Regulatory status, trial recruitment, and country policy can change quickly. Use the row-level source URLs and generated audit report before making operational, investment, travel-health, or procurement decisions.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    Built as a static GitHub Pages dashboard. Automated sources include ClinicalTrials.gov v2 and configured public-health/regulatory watch pages; row-level evidence links remain the audit trail.
+  </footer>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+  <aside class="drawer" id="detailDrawer" aria-label="Candidate details" aria-hidden="true">
+    <div class="drawer-head">
+      <h3 class="drawer-title" id="drawerTitle">Candidate details</h3>
+      <button class="btn" type="button" id="drawerClose">Close</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+
+  <script>
+    const DATA = [{"id": "zikv-vrc5283-vrc-705-dna-zika-vaccine-e6c3eda1", "target_virus": "Zika virus", "target_abbrev": "ZIKV", "virus_group": "Mosquito-borne / congenital-risk flavivirus", "vector_or_route": "Aedes mosquitoes; sexual and congenital transmission also relevant", "candidate": "VRC5283 / VRC 705 DNA Zika vaccine", "platform": "DNA vaccine encoding Zika virus prM/E antigens", "developer_sponsor": "NIH Vaccine Research Center / NIAID and collaborators", "stage_order": 4, "stage": "Phase 2", "status_type": "Phase 2 clinical development", "active_status": "Completed/closed trial signal; no licensed vaccine", "regulatory_status": "Investigational; no authorized Zika vaccine seeded", "target_use": "Potential outbreak/congenital-risk protection for reproductive-age populations if efficacy pathway resumes", "evidence_summary": "VRC5283 advanced into a Phase 2/2B Zika vaccine study, but Zika vaccine development remains without a licensed product.", "next_milestone": "Determine feasible efficacy/immunobridging pathway under lower or episodic transmission conditions.", "development_geography": "Americas and U.S. clinical research sites", "source_1": "ClinicalTrials.gov NCT03110770", "source_url_1": "https://clinicaltrials.gov/study/NCT03110770", "source_2": "NIAID Zika vaccine trial announcement", "source_url_2": "https://www.niaid.nih.gov/news-events/phase-2-zika-vaccine-trial-begins-us-central-and-south-america", "source_3": "WHO Zika fact sheet", "source_url_3": "https://www.who.int/news-room/fact-sheets/detail/zika-virus", "notes": "Highest seeded Zika stage is clinical, but not licensure.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "zikv-mrna-1893-zika-vaccine-f016aa75", "target_virus": "Zika virus", "target_abbrev": "ZIKV", "virus_group": "Mosquito-borne / congenital-risk flavivirus", "vector_or_route": "Aedes mosquitoes; sexual and congenital transmission also relevant", "candidate": "mRNA-1893 Zika vaccine", "platform": "mRNA vaccine encoding Zika virus antigens", "developer_sponsor": "Moderna", "stage_order": 4, "stage": "Phase 2", "status_type": "Phase 2 clinical development", "active_status": "Phase 2 dose-confirmation clinical signal", "regulatory_status": "Investigational; no authorized Zika vaccine seeded", "target_use": "Potential outbreak/congenital-risk protection if development pathway succeeds", "evidence_summary": "mRNA-1893 has Phase 1 and Phase 2 ClinicalTrials.gov records and is tracked as a clinical-stage Zika candidate.", "next_milestone": "Safety, immunogenicity, durability, and viable efficacy/immunobridging strategy.", "development_geography": "United States and trial-network sites", "source_1": "ClinicalTrials.gov NCT04917861", "source_url_1": "https://clinicaltrials.gov/study/NCT04917861", "source_2": "ClinicalTrials.gov NCT04064905", "source_url_2": "https://clinicaltrials.gov/study/NCT04064905", "source_3": "WHO Zika fact sheet", "source_url_3": "https://www.who.int/news-room/fact-sheets/detail/zika-virus", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "zikv-zpiv-purified-inactivated-zika-vaccine-lineage-d2e67d32", "target_virus": "Zika virus", "target_abbrev": "ZIKV", "virus_group": "Mosquito-borne / congenital-risk flavivirus", "vector_or_route": "Aedes mosquitoes; sexual and congenital transmission also relevant", "candidate": "ZPIV purified inactivated Zika vaccine lineage", "platform": "Purified inactivated whole-virus Zika vaccine", "developer_sponsor": "Walter Reed Army Institute of Research / NIAID / BARDA partners", "stage_order": 3, "stage": "Phase 1", "status_type": "Phase 1 clinical development", "active_status": "Early clinical signal", "regulatory_status": "Investigational; no authorized Zika vaccine seeded", "target_use": "Potential outbreak/congenital-risk protection if development pathway resumes", "evidence_summary": "ZPIV and related inactivated Zika vaccine candidates entered Phase 1 studies but are not licensed products.", "next_milestone": "Define development sponsor, immune correlate, and efficacy/immunobridging pathway.", "development_geography": "United States and other early clinical-trial settings", "source_1": "ClinicalTrials.gov NCT02937233", "source_url_1": "https://clinicaltrials.gov/study/NCT02937233", "source_2": "WHO Zika fact sheet", "source_url_2": "https://www.who.int/news-room/fact-sheets/detail/zika-virus", "source_3": "", "source_url_3": "", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "denv-dengvaxia-cyd-tdv-135eccc2", "target_virus": "Dengue virus", "target_abbrev": "DENV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Aedes mosquitoes", "candidate": "Dengvaxia / CYD-TDV", "platform": "Live attenuated chimeric tetravalent dengue vaccine", "developer_sponsor": "Sanofi Pasteur", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Licensed / restricted programmatic use", "active_status": "Use limited to seropositive populations where recommended/authorized", "regulatory_status": "FDA-approved for laboratory-confirmed previous dengue infection in specified endemic-area pediatric/adolescent populations; other country policies vary", "target_use": "Seropositive people in defined age/geography groups; not a universal dengue vaccine lane", "evidence_summary": "Dengvaxia is a licensed tetravalent dengue vaccine but requires strict prior-infection targeting because of safety/benefit considerations.", "next_milestone": "Maintain serostatus-linked policy safeguards and monitor country-specific use recommendations.", "development_geography": "Selected endemic jurisdictions; U.S. endemic territories under ACIP/FDA constraints", "source_1": "FDA Dengvaxia package insert", "source_url_1": "https://www.fda.gov/media/124379/download", "source_2": "CDC dengue vaccine guidance", "source_url_2": "https://www.cdc.gov/dengue/hcp/vaccine/index.html", "source_3": "WHO prequalified vaccines list", "source_url_3": "https://extranet.who.int/prequal/vaccines/prequalified-vaccines", "notes": "Counted as post-licensure but flagged as restricted-use rather than broad deployment.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "denv-qdenga-tak-003-99f82e3c", "target_virus": "Dengue virus", "target_abbrev": "DENV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Aedes mosquitoes", "candidate": "Qdenga / TAK-003", "platform": "Live attenuated tetravalent dengue vaccine", "developer_sponsor": "Takeda", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Authorized / WHO-prequalified", "active_status": "Authorized in several jurisdictions; WHO prequalified", "regulatory_status": "WHO prequalified in 2024; EMA-authorized; national recommendations differ", "target_use": "Children/adolescents in high-transmission settings where recommended and travellers where authorized by national policy", "evidence_summary": "TAK-003/Qdenga became the second dengue vaccine prequalified by WHO, adding a major programmatic dengue-vaccine option.", "next_milestone": "Track national policy adoption, risk-group guidance, supply scale-up, and post-authorization safety/effectiveness data.", "development_geography": "WHO prequalification; EU and multiple endemic-country regulatory pathways", "source_1": "WHO prequalifies new dengue vaccine", "source_url_1": "https://www.who.int/news/item/15-05-2024-who-prequalifies-new-dengue-vaccine", "source_2": "EMA Qdenga EPAR", "source_url_2": "https://www.ema.europa.eu/en/medicines/human/EPAR/qdenga", "source_3": "WHO prequalified vaccines list", "source_url_3": "https://extranet.who.int/prequal/vaccines/prequalified-vaccines", "notes": "National recommendations can be more restrictive than the marketing authorization.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "denv-tv003-tv005-butantan-dv-lineage-103e03c5", "target_virus": "Dengue virus", "target_abbrev": "DENV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Aedes mosquitoes", "candidate": "TV003 / TV005 / Butantan-DV lineage", "platform": "Single-dose live attenuated tetravalent dengue vaccine candidate", "developer_sponsor": "U.S. NIH/NIAID lineage; Instituto Butantan and partners", "stage_order": 5, "stage": "Efficacy / Phase 3", "status_type": "Efficacy-stage clinical development", "active_status": "Phase 3 / efficacy-stage evidence signal", "regulatory_status": "Investigational; no dashboard-seeded WHO/FDA/EMA authorization signal", "target_use": "Potential broad endemic-area dengue vaccination if efficacy, safety, and regulatory endpoints are met", "evidence_summary": "The TV003/TV005 lineage is represented as an efficacy-stage dengue vaccine candidate; automated ClinicalTrials.gov refresh can update linked trial status.", "next_milestone": "Regulatory review, implementation policy, and post-trial safety/effectiveness assessment if filings proceed.", "development_geography": "Brazil and other dengue-endemic research settings", "source_1": "ClinicalTrials.gov NCT02406729", "source_url_1": "https://clinicaltrials.gov/study/NCT02406729", "source_2": "NIAID dengue vaccine research", "source_url_2": "https://www.niaid.nih.gov/diseases-conditions/dengue-vaccines", "source_3": "", "source_url_3": "", "notes": "Seeded as Phase 3/efficacy-stage rather than authorized; confirm country-specific regulatory status before use.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "jev-ixiaro-ic51-d3f71177", "target_virus": "Japanese encephalitis virus", "target_abbrev": "JEV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; enzootic pig/bird cycle", "candidate": "IXIARO / IC51", "platform": "Purified inactivated, Vero-cell-derived Japanese encephalitis vaccine", "developer_sponsor": "Valneva Austria GmbH", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Licensed / deployed", "active_status": "Travel and risk-based use", "regulatory_status": "FDA and EMA-authorized for prevention of disease caused by Japanese encephalitis virus in age-defined populations", "target_use": "Travellers to endemic areas, laboratory workers, and other risk groups according to national guidance", "evidence_summary": "IXIARO is an authorized inactivated Japanese encephalitis vaccine and is used for risk-based protection outside routine endemic-country programmes.", "next_milestone": "Continue risk-based travel/laboratory recommendations and supply monitoring.", "development_geography": "United States, European Union, travel-medicine markets, and other jurisdictions", "source_1": "FDA IXIARO product page", "source_url_1": "https://www.fda.gov/vaccines-blood-biologics/vaccines/ixiaro", "source_2": "CDC Japanese encephalitis vaccine guidance", "source_url_2": "https://www.cdc.gov/japanese-encephalitis/hcp/vaccine/index.html", "source_3": "EMA IXIARO product information", "source_url_3": "https://www.ema.europa.eu/en/medicines/human/EPAR/ixiaro", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "jev-live-attenuated-sa14-14-2-japanese-encephalitis-vaccines-a5ac91a0", "target_virus": "Japanese encephalitis virus", "target_abbrev": "JEV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; enzootic pig/bird cycle", "candidate": "Live attenuated SA14-14-2 Japanese encephalitis vaccines", "platform": "Live attenuated SA14-14-2", "developer_sponsor": "Chengdu Institute of Biological Products and other regional programme partners", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "WHO-prequalified / programmatic use", "active_status": "Routine use in endemic-country immunization programmes", "regulatory_status": "WHO-prequalified product lineage and widely used endemic-country programme vaccine", "target_use": "Pediatric routine immunization and campaigns in endemic countries", "evidence_summary": "SA14-14-2 is a mature JE vaccine platform used programmatically in endemic settings, including WHO-prequalified supply pathways.", "next_milestone": "Maintain endemic-country coverage, supply quality, and surveillance for programme impact.", "development_geography": "Asia-Pacific endemic countries; global procurement channels where applicable", "source_1": "WHO Japanese encephalitis vaccine standardization", "source_url_1": "https://www.who.int/teams/health-product-policy-and-standards/standards-and-specifications/vaccine-standardization/japanese-encephalitis", "source_2": "WHO prequalified vaccines list", "source_url_2": "https://extranet.who.int/prequal/vaccines/prequalified-vaccines", "source_3": "PATH Japanese encephalitis vaccine overview", "source_url_3": "https://www.path.org/our-impact/resources/japanese-encephalitis-vaccine/", "notes": "Row groups multiple programme products/platform instances at the target-virus level.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "mvev-no-murray-valley-encephalitis-human-vaccine-pathway-identified-958c5a81", "target_virus": "Murray Valley encephalitis virus", "target_abbrev": "MVEV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; enzootic waterbird cycle", "candidate": "No Murray Valley encephalitis human-vaccine pathway identified", "platform": "Gap lane", "developer_sponsor": "None identified by automated scan/seed sources", "stage_order": 0, "stage": "No dedicated human-vaccine pathway / gap lane", "status_type": "Gap / no dedicated pathway", "active_status": "No human vaccine identified", "regulatory_status": "No vaccine or specific treatment in seeded Australian CDC guidance", "target_use": "No licensed human vaccine; prevention relies on mosquito avoidance and surveillance", "evidence_summary": "Australian public-health guidance identifies no vaccine or specific treatment for Murray Valley encephalitis virus infection.", "next_milestone": "Assess cross-protection science, One Health surveillance triggers, and feasibility of a dedicated candidate pathway.", "development_geography": "Australia and Papua New Guinea region", "source_1": "Australian CDC MVE overview", "source_url_1": "https://www.cdc.gov.au/diseases/murray-valley-encephalitis-mve-virus-infection", "source_2": "PHAC pathogen safety data sheet for MVEV", "source_url_2": "https://www.canada.ca/en/public-health/services/laboratory-biosafety-biosecurity/pathogen-safety-data-sheets-risk-assessment/murray-valley-encephalitis.html", "source_3": "", "source_url_3": "", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "slev-no-st-louis-encephalitis-human-vaccine-pathway-identified-bc4e9a60", "target_virus": "St. Louis encephalitis virus", "target_abbrev": "SLEV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; bird reservoir", "candidate": "No St. Louis encephalitis human-vaccine pathway identified", "platform": "Gap lane", "developer_sponsor": "None identified by automated scan/seed sources", "stage_order": 0, "stage": "No dedicated human-vaccine pathway / gap lane", "status_type": "Gap / no dedicated pathway", "active_status": "No human vaccine identified", "regulatory_status": "No St. Louis encephalitis vaccines available for humans in seeded CDC guidance", "target_use": "No dedicated human vaccine pathway identified; mosquito-bite prevention remains primary", "evidence_summary": "CDC guidance states that no St. Louis encephalitis vaccines are available for use in humans.", "next_milestone": "Prioritization decision, candidate discovery, and potential integration with broader JE-serocomplex vaccine strategy.", "development_geography": "Americas", "source_1": "CDC SLE treatment/prevention", "source_url_1": "https://www.cdc.gov/sle/hcp/treatment-prevention/index.html", "source_2": "CDC SLE overview", "source_url_2": "https://www.cdc.gov/sle/about/index.html", "source_3": "", "source_url_3": "", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "usuv-no-usutu-human-vaccine-pathway-identified-5a601aae", "target_virus": "Usutu virus", "target_abbrev": "USUV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; bird reservoir", "candidate": "No Usutu human-vaccine pathway identified", "platform": "Gap lane", "developer_sponsor": "None identified by automated scan/seed sources", "stage_order": 0, "stage": "No dedicated human-vaccine pathway / gap lane", "status_type": "Gap / no dedicated pathway", "active_status": "No human vaccine identified", "regulatory_status": "No Usutu vaccine available for humans in seeded CDC guidance", "target_use": "No licensed human vaccine; prevention relies on mosquito avoidance and surveillance", "evidence_summary": "CDC guidance states that no Usutu virus vaccines are available for use in humans.", "next_milestone": "Clarify burden, risk groups, and whether WNV/JE-serocomplex vaccine technologies provide a development shortcut.", "development_geography": "Europe and other Culex-borne flavivirus surveillance settings", "source_1": "CDC Usutu clinical prevention", "source_url_1": "https://www.cdc.gov/usutu/hcp/clinical-diagnosis-treatment/index.html", "source_2": "CDC Usutu overview", "source_url_2": "https://www.cdc.gov/usutu/about/index.html", "source_3": "", "source_url_3": "", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "wnv-hydrovax-001b-west-nile-virus-vaccine-3eb3c8d8", "target_virus": "West Nile virus", "target_abbrev": "WNV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Culex mosquitoes; bird reservoir", "candidate": "HydroVax-001B West Nile virus vaccine", "platform": "Hydrogen peroxide-inactivated whole-virus vaccine candidate", "developer_sponsor": "Oregon Health & Science University / IDCRC / NIAID-supported network", "stage_order": 3, "stage": "Phase 1", "status_type": "Phase 1 clinical development", "active_status": "Phase 1 safety/immunogenicity trial signal", "regulatory_status": "Investigational; no licensed human WNV vaccine", "target_use": "Potential severe-disease prevention for older adults and other high-risk groups if clinical pathway succeeds", "evidence_summary": "HydroVax-001B is in Phase 1 human evaluation, while public-health guidance still notes no licensed human WNV vaccine.", "next_milestone": "Phase 1 safety/immunogenicity readout and decision on age/risk-group development strategy.", "development_geography": "United States", "source_1": "ClinicalTrials.gov NCT06745921", "source_url_1": "https://clinicaltrials.gov/study/NCT06745921", "source_2": "IDCRC WNV vaccine trial launch", "source_url_2": "https://idcrc.org/about/news-archive/west-nile.html", "source_3": "CDC WNV treatment/prevention", "source_url_3": "https://www.cdc.gov/west-nile-virus/hcp/treatment-prevention/index.html", "notes": "No licensed human vaccine row is not a separate gap because a dedicated human clinical pathway is now represented.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "yfv-17d-yellow-fever-vaccines-yf-vax-stamaril-who-pq-producers-979ba25e", "target_virus": "Yellow fever virus", "target_abbrev": "YFV", "virus_group": "Mosquito-borne flavivirus", "vector_or_route": "Aedes/Hemagogus mosquitoes", "candidate": "17D yellow fever vaccines (YF-VAX / Stamaril / WHO-PQ producers)", "platform": "Live attenuated 17D-lineage vaccines", "developer_sponsor": "Sanofi, Bio-Manguinhos/Fiocruz, Institut Pasteur de Dakar, and other WHO-prequalified/public-sector manufacturers", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Licensed / deployed", "active_status": "Programmatic and travel use", "regulatory_status": "Licensed in multiple jurisdictions; WHO-recommended prevention measure; emergency stockpile use", "target_use": "Routine immunization in endemic areas, outbreak response, travel requirements, laboratory-risk protection, and emergency stockpile", "evidence_summary": "Long-established 17D-lineage vaccines anchor global yellow fever prevention; a single dose is considered to provide long-term/lifelong protection in standard recommendations.", "next_milestone": "Maintain supply resilience, outbreak stockpile readiness, and risk-based vaccination coverage.", "development_geography": "Global; endemic areas in Africa and South America plus travel clinics", "source_1": "FDA YF-VAX product page", "source_url_1": "https://www.fda.gov/vaccines-blood-biologics/vaccines/yf-vax", "source_2": "WHO yellow fever fact sheet", "source_url_2": "https://www.who.int/news-room/fact-sheets/detail/yellow-fever", "source_3": "CDC Yellow Book yellow fever chapter", "source_url_3": "https://www.cdc.gov/yellow-book/hcp/travel-associated-infections-diseases/yellow-fever.html", "notes": "Dashboard stage reflects vaccine-development maturity, not current outbreak risk or country-entry requirements.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "powv-pow-vlp-and-other-preclinical-powassan-vaccine-candidates-4110a736", "target_virus": "Powassan virus", "target_abbrev": "POWV", "virus_group": "Tick-borne flavivirus", "vector_or_route": "Ixodes ticks", "candidate": "POW-VLP and other preclinical Powassan vaccine candidates", "platform": "Virus-like particle / live-attenuated / experimental platform candidates", "developer_sponsor": "Academic and preclinical developers including ATCC-linked POW-VLP work", "stage_order": 2, "stage": "Preclinical or manufacturing-enabling", "status_type": "Preclinical", "active_status": "Preclinical proof-of-concept; no human vaccine", "regulatory_status": "No licensed human Powassan vaccine", "target_use": "Exploratory prevention for tick-exposed populations in endemic areas if candidate matures", "evidence_summary": "Preclinical Powassan vaccine candidates have shown immunogenicity/protection signals in animal models, but public-health guidance reports no human vaccine is available.", "next_milestone": "Candidate selection, GLP toxicology/CMC package, and first-in-human trial readiness.", "development_geography": "Preclinical research; North America focus", "source_1": "ATCC POW-VLP vaccine candidate webinar", "source_url_1": "https://www.atcc.org/resources/webinars/2021-webinars/creating-a-vaccine-for-the-tick-borne-powassan-virus", "source_2": "Pathogens POW-VLP preclinical article", "source_url_2": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8229747/", "source_3": "CDC Powassan treatment/prevention", "source_url_3": "https://www.cdc.gov/powassan/hcp/treatment-prevention/index.html", "notes": "Not upstaged above preclinical without a structured human-trial signal.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "tbev-encepur-and-other-established-tbe-vaccines-78b74465", "target_virus": "Tick-borne encephalitis virus", "target_abbrev": "TBEV", "virus_group": "Tick-borne flavivirus", "vector_or_route": "Ixodes ticks; occasional unpasteurized dairy exposure", "candidate": "Encepur and other established TBE vaccines", "platform": "Inactivated whole-virus tick-borne encephalitis vaccines", "developer_sponsor": "Bavarian Nordic / GSK legacy and regional manufacturers", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Licensed / deployed", "active_status": "Endemic-country and travel-risk use", "regulatory_status": "Authorized in multiple non-U.S. jurisdictions; WHO describes several widely used assured-quality TBE vaccines", "target_use": "Risk-based and routine use in TBE-endemic countries according to national recommendations", "evidence_summary": "Multiple TBE vaccines beyond TicoVac/FSME-IMMUN are mature products in endemic-region vaccination practice.", "next_milestone": "Track jurisdiction-specific product availability, recommendations, and effectiveness data.", "development_geography": "Europe and Eurasian endemic regions", "source_1": "WHO TBE vaccine standardization", "source_url_1": "https://www.who.int/teams/health-product-policy-and-standards/standards-and-specifications/vaccine-standardization/tick-borne-encephalitis", "source_2": "CDC TBE vaccine guidance", "source_url_2": "https://www.cdc.gov/tick-borne-encephalitis/hcp/vaccine/index.html", "source_3": "", "source_url_3": "", "notes": "Grouped row captures mature non-U.S. TBE products; product-level availability varies by country.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "tbev-ticovac-fsme-immun-7d73eeeb", "target_virus": "Tick-borne encephalitis virus", "target_abbrev": "TBEV", "virus_group": "Tick-borne flavivirus", "vector_or_route": "Ixodes ticks; occasional unpasteurized dairy exposure", "candidate": "TicoVac / FSME-IMMUN", "platform": "Inactivated whole-virus tick-borne encephalitis vaccine", "developer_sponsor": "Pfizer", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Licensed / deployed", "active_status": "Risk-based use in endemic-area travellers and other exposed groups", "regulatory_status": "FDA-approved for individuals aged 1 year and older; related FSME-IMMUN product lineage used in Europe", "target_use": "Travellers/residents with TBE exposure risk and laboratory-risk groups according to national guidance", "evidence_summary": "TicoVac is an authorized inactivated TBE vaccine and part of a broader mature TBE vaccine ecosystem.", "next_milestone": "Maintain risk-based recommendations and monitor traveler/endemic-country programme needs.", "development_geography": "United States, Europe, and other TBE-endemic regions", "source_1": "FDA TICOVAC package insert", "source_url_1": "https://www.fda.gov/media/151502/download", "source_2": "CDC TBE vaccine guidance", "source_url_2": "https://www.cdc.gov/tick-borne-encephalitis/hcp/vaccine/index.html", "source_3": "WHO TBE vaccine standardization", "source_url_3": "https://www.who.int/teams/health-product-policy-and-standards/standards-and-specifications/vaccine-standardization/tick-borne-encephalitis", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "ahfv-no-dedicated-alkhurma-hemorrhagic-fever-human-vaccine-pathway-identified-057cccb4", "target_virus": "Alkhurma hemorrhagic fever virus", "target_abbrev": "AHFV", "virus_group": "Tick-borne hemorrhagic flavivirus", "vector_or_route": "Ticks and contact with infected animals/animal products", "candidate": "No dedicated Alkhurma hemorrhagic fever human-vaccine pathway identified", "platform": "Gap lane", "developer_sponsor": "None identified by automated scan/seed sources", "stage_order": 0, "stage": "No dedicated human-vaccine pathway / gap lane", "status_type": "Gap / no dedicated pathway", "active_status": "No dedicated vaccine identified", "regulatory_status": "No vaccine identified in seeded public disease-profile guidance", "target_use": "No dedicated human vaccine pathway identified", "evidence_summary": "Configured public sources identify no current vaccine for Alkhurma hemorrhagic fever virus.", "next_milestone": "Define epidemiologic target-product rationale and preclinical candidate strategy if prioritised.", "development_geography": "Arabian Peninsula / regional exposure settings", "source_1": "EFSA Alkhurma haemorrhagic fever disease profile", "source_url_1": "https://animal-diseases.efsa.europa.eu/AHFV", "source_2": "CDC Alkhurma hemorrhagic fever basics", "source_url_2": "https://www.cdc.gov/alkhurma/about/index.html", "source_3": "", "source_url_3": "", "notes": "", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "kfdv-local-formalin-inactivated-kfd-vaccine-13c097ee", "target_virus": "Kyasanur Forest disease virus", "target_abbrev": "KFDV", "virus_group": "Tick-borne hemorrhagic flavivirus", "vector_or_route": "Haemaphysalis ticks; forest exposure in India", "candidate": "Local formalin-inactivated KFD vaccine", "platform": "Formalin-inactivated tissue-culture KFD vaccine", "developer_sponsor": "Indian state/public-health programme supply lineage", "stage_order": 7, "stage": "Programmatic use / stockpile / post-licensure", "status_type": "Regional programme use", "active_status": "Available for people at risk in affected Indian regions, with effectiveness/supply caveats", "regulatory_status": "Regional/local risk-based vaccine availability; not a globally licensed product lane", "target_use": "People at occupational/geographic risk in Kyasanur Forest disease endemic districts", "evidence_summary": "KFD has had a regional inactivated vaccine option for at-risk populations, although improved vaccines are being developed because durability/effectiveness and programme logistics remain concerns.", "next_milestone": "Clarify current supply, coverage, effectiveness, and transition strategy to improved vaccine candidates.", "development_geography": "Western Ghats region, India", "source_1": "CDC Kyasanur Forest disease overview", "source_url_1": "https://www.cdc.gov/kyasanur/about/index.html", "source_2": "ICMR/PIB improved KFD vaccine notice", "source_url_2": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2224977&lang=1&reg=3", "source_3": "", "source_url_3": "", "notes": "Stage 7 reflects regional programme availability, not broad international licensure.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "kfdv-icmr-niv-indian-immunologicals-improved-inactivated-kfd-candidate-7502fe5e", "target_virus": "Kyasanur Forest disease virus", "target_abbrev": "KFDV", "virus_group": "Tick-borne hemorrhagic flavivirus", "vector_or_route": "Haemaphysalis ticks; forest exposure in India", "candidate": "ICMR-NIV / Indian Immunologicals improved inactivated KFD candidate", "platform": "Adjuvanted inactivated whole-virion candidate", "developer_sponsor": "ICMR-National Institute of Virology and Indian Immunologicals Limited", "stage_order": 2, "stage": "Preclinical or manufacturing-enabling", "status_type": "Preclinical / manufacturing-enabling", "active_status": "Improved candidate in development", "regulatory_status": "Investigational", "target_use": "Improved two-dose risk-based vaccine option for KFD endemic regions if clinical/regulatory milestones are met", "evidence_summary": "Indian public-sector and manufacturer partners report progress on an improved inactivated KFD vaccine candidate, with preclinical and manufacturing-development signals.", "next_milestone": "Human clinical trial confirmation, immunogenicity/safety readouts, and regulatory review.", "development_geography": "India", "source_1": "Government of India PIB KFD vaccine notice", "source_url_1": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2224977&lang=1&reg=3", "source_2": "Frontiers in Immunology KFD vaccine candidate article", "source_url_2": "https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2026.1786057/full", "source_3": "", "source_url_3": "", "notes": "Script will upstage only if structured clinical-trial records or configured official sources provide a clear milestone.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}, {"id": "ohfv-no-dedicated-omsk-hemorrhagic-fever-human-vaccine-pathway-identified-b8d72983", "target_virus": "Omsk hemorrhagic fever virus", "target_abbrev": "OHFV", "virus_group": "Tick-borne hemorrhagic flavivirus", "vector_or_route": "Ticks and contact with infected muskrats/other animals", "candidate": "No dedicated Omsk hemorrhagic fever human-vaccine pathway identified", "platform": "Gap lane", "developer_sponsor": "None identified by automated scan/seed sources", "stage_order": 0, "stage": "No dedicated human-vaccine pathway / gap lane", "status_type": "Gap / no dedicated pathway", "active_status": "No dedicated vaccine identified", "regulatory_status": "No Omsk hemorrhagic fever vaccine currently available in seeded public-health guidance", "target_use": "No dedicated human vaccine pathway identified; TBE vaccines may be considered for some high-risk groups where appropriate", "evidence_summary": "Public-health guidance reports no dedicated Omsk hemorrhagic fever vaccine; TBE vaccines may offer partial/cross-protection considerations for selected high-risk groups but are not target-specific OHF vaccines.", "next_milestone": "Assess whether target-specific candidate development is warranted for exposed occupational groups.", "development_geography": "Western Siberia / high-risk occupational settings", "source_1": "CDC Omsk hemorrhagic fever overview", "source_url_1": "https://www.cdc.gov/omsk-fever/about/index.html", "source_2": "", "source_url_2": "", "source_3": "", "source_url_3": "", "notes": "Cross-protection by TBE vaccine is not counted as a dedicated OHFV vaccine lane.", "automation_method": "Curated official-source seed row; refreshed alongside automated ClinicalTrials.gov scan", "last_checked_utc": "2026-06-15T14:00:44Z", "supporting_record_count": 1}];
+    const STAGES = {"0": "No dedicated human-vaccine pathway / gap lane", "1": "Discovery / translational", "2": "Preclinical or manufacturing-enabling", "3": "Phase 1", "4": "Phase 2", "5": "Efficacy / Phase 3", "6": "Regulatory authorization / WHO prequalification", "7": "Programmatic use / stockpile / post-licensure"};
+    const BUILT_AT = "2026-06-15T14:00:46Z";
+
+    const state = {
+      target: "All",
+      group: "All",
+      stage: "All",
+      status: "All",
+      search: "",
+      showGaps: true,
+    };
+
+    const el = (id) => document.getElementById(id);
+    const targetFilter = el("targetFilter");
+    const groupFilter = el("groupFilter");
+    const stageFilter = el("stageFilter");
+    const statusFilter = el("statusFilter");
+    const searchBox = el("searchBox");
+    const gapToggle = el("gapToggle");
+
+    function unique(values) {
+      return Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b)));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function stageTone(order) {
+      if (order === 0) return "gap";
+      if (order <= 2) return "early";
+      if (order <= 5) return "clinical";
+      if (order === 6) return "regulatory";
+      return "post";
+    }
+
+    function stageName(order) {
+      return STAGES[String(order)] || STAGES[order] || "Unmapped";
+    }
+
+    function shortStage(order) {
+      if (order === 0) return "Gap";
+      if (order === 1) return "Discovery";
+      if (order === 2) return "Preclinical";
+      if (order === 3) return "Phase 1";
+      if (order === 4) return "Phase 2";
+      if (order === 5) return "Phase 3 / efficacy";
+      if (order === 6) return "Authorization";
+      if (order === 7) return "Programme / post-licensure";
+      return "Stage " + order;
+    }
+
+    function option(label, value = label) {
+      return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+    }
+
+    function populateFilters() {
+      targetFilter.innerHTML = option("All targets", "All") + unique(DATA.map(r => `${r.target_abbrev} — ${r.target_virus}`)).map(label => option(label)).join("");
+      groupFilter.innerHTML = option("All groups", "All") + unique(DATA.map(r => r.virus_group)).map(v => option(v)).join("");
+      stageFilter.innerHTML = option("All stages", "All") + Object.keys(STAGES).sort((a,b) => Number(a)-Number(b)).map(k => option(`Stage ${k}: ${STAGES[k]}`, k)).join("");
+      statusFilter.innerHTML = option("All status types", "All") + unique(DATA.map(r => r.status_type)).map(v => option(v)).join("");
+    }
+
+    function rowMatchesSearch(row, query) {
+      if (!query) return true;
+      const haystack = [
+        row.target_virus, row.target_abbrev, row.virus_group, row.vector_or_route,
+        row.candidate, row.platform, row.developer_sponsor, row.stage,
+        row.status_type, row.active_status, row.regulatory_status, row.target_use,
+        row.evidence_summary, row.next_milestone, row.development_geography,
+        row.source_1, row.source_2, row.source_3, row.notes, row.automation_method
+      ].join(" ").toLowerCase();
+      return haystack.includes(query.toLowerCase());
+    }
+
+    function filteredRows() {
+      return DATA.filter(row => {
+        if (!state.showGaps && Number(row.stage_order) === 0) return false;
+        if (state.target !== "All" && `${row.target_abbrev} — ${row.target_virus}` !== state.target) return false;
+        if (state.group !== "All" && row.virus_group !== state.group) return false;
+        if (state.stage !== "All" && String(row.stage_order) !== state.stage) return false;
+        if (state.status !== "All" && row.status_type !== state.status) return false;
+        if (!rowMatchesSearch(row, state.search)) return false;
+        return true;
+      }).sort(compareRows);
+    }
+
+    function compareRows(a, b) {
+      return String(a.virus_group).localeCompare(String(b.virus_group)) ||
+        String(a.target_abbrev).localeCompare(String(b.target_abbrev)) ||
+        Number(b.stage_order) - Number(a.stage_order) ||
+        String(a.candidate).localeCompare(String(b.candidate));
+    }
+
+    function renderMetrics() {
+      const targets = unique(DATA.map(r => r.target_abbrev));
+      const nonGap = DATA.filter(r => Number(r.stage_order) > 0);
+      const matureTargets = unique(DATA.filter(r => Number(r.stage_order) >= 6).map(r => r.target_abbrev));
+      const clinicalRows = DATA.filter(r => Number(r.stage_order) >= 3 && Number(r.stage_order) <= 5);
+      const gapTargets = unique(DATA.filter(r => Number(r.stage_order) === 0).map(r => r.target_abbrev));
+      const rows = filteredRows();
+      const cards = [
+        [targets.length, "target viruses represented"],
+        [nonGap.length, "candidate or product rows"],
+        [matureTargets.length, "targets with authorization/programme signals"],
+        [clinicalRows.length, "active or historical clinical-stage rows"],
+        [rows.length, "rows under current filters"],
+      ];
+      el("metrics").innerHTML = cards.map(([value, label]) => `
+        <div class="metric-card">
+          <div class="metric-value">${escapeHtml(value)}</div>
+          <div class="metric-label">${escapeHtml(label)}</div>
+        </div>
+      `).join("");
+    }
+
+    function targetSnapshotRows() {
+      const targets = unique(DATA.map(r => r.target_abbrev));
+      return targets.map(code => {
+        const rows = DATA.filter(r => r.target_abbrev === code && (state.showGaps || Number(r.stage_order) > 0));
+        const allRows = DATA.filter(r => r.target_abbrev === code);
+        const highest = rows.length ? Math.max(...rows.map(r => Number(r.stage_order))) : 0;
+        const topRows = allRows.filter(r => Number(r.stage_order) === highest);
+        const nonGapCount = allRows.filter(r => Number(r.stage_order) > 0).length;
+        const representative = topRows[0] || allRows[0] || {};
+        return { code, rows: allRows, representative, highest, nonGapCount };
+      }).sort((a, b) => Number(b.highest) - Number(a.highest) || a.code.localeCompare(b.code));
+    }
+
+    function renderSnapshots() {
+      el("snapshotGrid").innerHTML = targetSnapshotRows().map(item => {
+        const rep = item.representative;
+        const countText = item.nonGapCount === 0 ? "No candidate/product row mapped" : `${item.nonGapCount} candidate/product row${item.nonGapCount === 1 ? "" : "s"} mapped`;
+        return `
+          <button type="button" class="snapshot-card" data-target="${escapeHtml(item.code)}">
+            <div class="target-name">${escapeHtml(rep.target_virus || item.code)}</div>
+            <div class="target-code">${escapeHtml(item.code)} · ${escapeHtml(rep.virus_group || "")}</div>
+            <span class="stage-pill ${stageTone(item.highest)}">Stage ${item.highest}: ${escapeHtml(shortStage(item.highest))}</span>
+            <div class="snapshot-meta">${escapeHtml(countText)}<br>${escapeHtml(rep.vector_or_route || "")}</div>
+          </button>
+        `;
+      }).join("");
+      document.querySelectorAll(".snapshot-card").forEach(card => {
+        card.addEventListener("click", () => {
+          const code = card.getAttribute("data-target");
+          const label = unique(DATA.filter(r => r.target_abbrev === code).map(r => `${r.target_abbrev} — ${r.target_virus}`))[0];
+          targetFilter.value = label;
+          state.target = label;
+          renderAll();
+          document.getElementById("pathway").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function cardHtml(row) {
+      const order = Number(row.stage_order);
+      return `
+        <button type="button" class="candidate-card stage-${order}" data-id="${escapeHtml(row.id)}">
+          <div class="card-kicker">${escapeHtml(row.target_abbrev)} · ${escapeHtml(row.virus_group)}</div>
+          <div class="card-title">${escapeHtml(row.candidate)}</div>
+          <div class="card-meta">${escapeHtml(row.active_status || row.status_type)}</div>
+          <div class="tag-row">
+            <span class="tag">${escapeHtml(row.platform || "platform n/a")}</span>
+            <span class="tag">${escapeHtml(row.development_geography || "geography n/a")}</span>
+            <span class="tag">${escapeHtml(row.supporting_record_count || 0)} record(s)</span>
+          </div>
+        </button>
+      `;
+    }
+
+    function renderPathway() {
+      const rows = filteredRows();
+      el("filteredCount").textContent = `${rows.length} row${rows.length === 1 ? "" : "s"} shown`;
+      const columns = Object.keys(STAGES).sort((a,b) => Number(a)-Number(b)).map(stage => {
+        const stageRows = rows.filter(r => Number(r.stage_order) === Number(stage));
+        return `
+          <div class="stage-column">
+            <div class="column-head">
+              <div class="column-title">Stage ${stage}</div>
+              <div class="column-sub">${escapeHtml(STAGES[stage])}</div>
+              <div class="column-count">${stageRows.length} row${stageRows.length === 1 ? "" : "s"}</div>
+            </div>
+            <div class="card-list">
+              ${stageRows.length ? stageRows.map(cardHtml).join("") : `<div class="empty">No rows match the current filters in this stage.</div>`}
+            </div>
+          </div>
+        `;
+      }).join("");
+      el("pathwayGrid").innerHTML = columns;
+      document.querySelectorAll(".candidate-card").forEach(card => card.addEventListener("click", () => openDetail(card.getAttribute("data-id"))));
+    }
+
+    function renderTable() {
+      const rows = filteredRows();
+      el("tableBody").innerHTML = rows.length ? rows.map(row => `
+        <tr data-id="${escapeHtml(row.id)}">
+          <td><strong>${escapeHtml(row.candidate)}</strong><div class="small">${escapeHtml(row.regulatory_status || "")}</div></td>
+          <td>${escapeHtml(row.target_abbrev)}<div class="small">${escapeHtml(row.target_virus)}</div></td>
+          <td><span class="stage-pill ${stageTone(Number(row.stage_order))}">Stage ${escapeHtml(row.stage_order)} · ${escapeHtml(shortStage(Number(row.stage_order)))}</span></td>
+          <td>${escapeHtml(row.status_type)}<div class="small">${escapeHtml(row.active_status || "")}</div></td>
+          <td>${escapeHtml(row.platform)}<div class="small">${escapeHtml(row.developer_sponsor || "")}</div></td>
+          <td>${escapeHtml(row.next_milestone || "")}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="6" class="muted">No rows match the current filters.</td></tr>`;
+      document.querySelectorAll("tbody tr[data-id]").forEach(row => row.addEventListener("click", () => openDetail(row.getAttribute("data-id"))));
+    }
+
+    function sourceLinks(row) {
+      const items = [];
+      for (let i = 1; i <= 3; i++) {
+        const label = row[`source_${i}`];
+        const url = row[`source_url_${i}`];
+        if (label || url) {
+          if (url) items.push(`<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label || url)}</a>`);
+          else items.push(`<div>${escapeHtml(label)}</div>`);
+        }
+      }
+      return items.length ? `<div class="source-list">${items.join("")}</div>` : `<p class="small">No source links attached to this row.</p>`;
+    }
+
+    function detailBox(label, value) {
+      return `<div class="detail-box"><div class="detail-label">${escapeHtml(label)}</div><div class="detail-value">${escapeHtml(value || "—")}</div></div>`;
+    }
+
+    function openDetail(id) {
+      const row = DATA.find(r => r.id === id);
+      if (!row) return;
+      el("drawerTitle").textContent = row.candidate;
+      el("drawerBody").innerHTML = `
+        <span class="stage-pill ${stageTone(Number(row.stage_order))}">Stage ${escapeHtml(row.stage_order)}: ${escapeHtml(stageName(Number(row.stage_order)))}</span>
+        <div class="detail-grid">
+          ${detailBox("Target", `${row.target_abbrev} — ${row.target_virus}`)}
+          ${detailBox("Virus group", row.virus_group)}
+          ${detailBox("Platform", row.platform)}
+          ${detailBox("Developer / sponsor", row.developer_sponsor)}
+          ${detailBox("Status", `${row.status_type}; ${row.active_status}`)}
+          ${detailBox("Geography", row.development_geography)}
+          ${detailBox("Regulatory status", row.regulatory_status)}
+          ${detailBox("Support records", row.supporting_record_count)}
+        </div>
+        <div class="detail-section"><h4>Target use</h4><p>${escapeHtml(row.target_use)}</p></div>
+        <div class="detail-section"><h4>Evidence summary</h4><p>${escapeHtml(row.evidence_summary)}</p></div>
+        <div class="detail-section"><h4>Next milestone</h4><p>${escapeHtml(row.next_milestone)}</p></div>
+        <div class="detail-section"><h4>Notes</h4><p>${escapeHtml(row.notes || "—")}</p></div>
+        <div class="detail-section"><h4>Automation method</h4><p>${escapeHtml(row.automation_method)}<br><span class="small">Last checked: ${escapeHtml(row.last_checked_utc)}</span></p></div>
+        <div class="detail-section"><h4>Source links</h4>${sourceLinks(row)}</div>
+      `;
+      document.body.classList.add("drawer-open");
+      el("detailDrawer").setAttribute("aria-hidden", "false");
+    }
+
+    function closeDetail() {
+      document.body.classList.remove("drawer-open");
+      el("detailDrawer").setAttribute("aria-hidden", "true");
+    }
+
+    function syncState() {
+      state.target = targetFilter.value;
+      state.group = groupFilter.value;
+      state.stage = stageFilter.value;
+      state.status = statusFilter.value;
+      state.search = searchBox.value.trim();
+      state.showGaps = gapToggle.checked;
+    }
+
+    function renderAll() {
+      syncState();
+      renderMetrics();
+      renderSnapshots();
+      renderPathway();
+      renderTable();
+    }
+
+    populateFilters();
+    renderAll();
+    [targetFilter, groupFilter, stageFilter, statusFilter, searchBox, gapToggle].forEach(control => control.addEventListener("input", renderAll));
+    el("drawerClose").addEventListener("click", closeDetail);
+    el("drawerBackdrop").addEventListener("click", closeDetail);
+    el("printBtn").addEventListener("click", () => window.print());
+    document.addEventListener("keydown", event => { if (event.key === "Escape") closeDetail(); });
+  </script>
+</body>
+</html>
