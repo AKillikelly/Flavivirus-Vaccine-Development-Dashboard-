@@ -44,6 +44,14 @@ jobs:
           path: "."
           include-hidden-files: true
 
+      - name: Verify Pages files
+        run: |
+          echo "Repository root:"
+          pwd
+          echo "Public folder contents:"
+          find public -maxdepth 2 -type f -print
+          test -f public/index.html          
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
