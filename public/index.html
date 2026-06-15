@@ -361,7 +361,179 @@
       .detail-grid { grid-template-columns: 1fr; }
       .drawer { width: 100vw; }
     }
+/* Light theme override */
+:root {
+  --bg: #f7f9fc;
+  --bg-2: #ffffff;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-strong: rgba(255, 255, 255, 0.96);
+  --text: #172033;
+  --muted: #5f6b7a;
+  --line: rgba(15, 23, 42, 0.14);
+  --shadow: 0 18px 50px rgba(15, 23, 42, 0.10);
+  --gap: #64748b;
+  --early: #2563eb;
+  --clinical: #7c3aed;
+  --regulatory: #15803d;
+  --post: #b45309;
+}
 
+body {
+  background:
+    radial-gradient(circle at top left, rgba(210, 229, 255, 0.75), transparent 28rem),
+    radial-gradient(circle at 70% 0%, rgba(211, 247, 235, 0.65), transparent 32rem),
+    linear-gradient(180deg, var(--bg), #eef3f8 62%, #f8fafc);
+  color: var(--text);
+}
+
+a {
+  color: #215f96;
+}
+
+a:hover {
+  color: #154872;
+}
+
+.eyebrow,
+.note,
+.btn,
+.filters,
+.metric-card,
+.snapshot-card,
+.stage-column,
+.table-card,
+.method-card {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.btn:hover,
+.snapshot-card:hover {
+  background: var(--panel-strong);
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(21, 128, 61, 0.12));
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.hero-copy,
+.metric-label,
+.section-head p,
+.field label,
+.snapshot-meta,
+.target-code,
+.card-kicker,
+.small,
+td.muted,
+footer,
+.method-card p,
+.column-sub {
+  color: var(--muted);
+}
+
+.field input,
+.field select,
+.checkbox-field {
+  background: #ffffff;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.column-head {
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom-color: var(--line);
+}
+
+.column-count,
+.card-meta,
+th,
+td,
+.note,
+.method-card,
+.detail-section p {
+  color: var(--text);
+}
+
+.candidate-card {
+  background: #ffffff;
+  color: var(--text);
+  border-color: var(--line);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+}
+
+.candidate-card:hover {
+  background: #f8fafc;
+  border-color: rgba(37, 99, 235, 0.30);
+}
+
+.stage-pill,
+.tag {
+  background: #f8fafc;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.stage-pill.gap {
+  color: #475569;
+}
+
+.stage-pill.early {
+  color: #1d4f78;
+}
+
+.stage-pill.clinical {
+  color: #6d28d9;
+}
+
+.stage-pill.regulatory {
+  color: #166534;
+}
+
+.stage-pill.post {
+  color: #92400e;
+}
+
+.empty {
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+thead {
+  background: #edf2f7;
+}
+
+th,
+td {
+  border-bottom-color: rgba(15, 23, 42, 0.10);
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+.drawer {
+  background: #ffffff;
+  color: var(--text);
+  border-left-color: var(--line);
+  box-shadow: -30px 0 70px rgba(15, 23, 42, 0.18);
+}
+
+.detail-box,
+.source-list a {
+  background: #f8fafc;
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.drawer-backdrop {
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.kbd {
+  color: #8a5a00;
+}
     @media print {
       body { background: #fff; color: #111; }
       .filters, .action-row, .drawer, .drawer-backdrop { display: none !important; }
